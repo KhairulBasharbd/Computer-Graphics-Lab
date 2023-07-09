@@ -1,83 +1,111 @@
 #include <graphics.h>
-#include <bits/stdc++.h>
 
-using namespace std;
+// Define the region codes for the clipping window
+const int INSIDE = 0;  // 0000
+const int LEFT = 1;    // 0001
+const int RIGHT = 2;   // 0010
+const int BOTTOM = 4;  // 0100
+const int TOP = 8;     // 1000
 
-double x_left = 120, x_right = 500, y_bottom = 100, y_top = 350; //... Clipping window
-int Left = 1, Right = 2, Bottom = 4, Top = 8; //... Region code
+// Define the clipping window coordinates
+const int X_MIN = 100;
+const int Y_MIN = 100;
+const int X_MAX = 400;
+const int Y_MAX = 300;
 
-int regionCode(int x, int y)
-{
-    int code = 0;
-    if (x > x_right) code |= Right;
-    else if (x < x_left) code |= Left;
-    if (y > y_top) code |= Top;
-    else if (y < y_bottom) code |= Bottom;
+// Function to compute the region code of a point
+int computeRegionCode(int x, int y) {
+    int code = INSIDE;  // Initialize as inside
+
+    if (x < X_MIN)
+        code |= LEFT;
+    else if (x > X_MAX)
+        code |= RIGHT;
+
+    if (y < Y_MIN)
+        code |= BOTTOM;
+    else if (y > Y_MAX)
+        code |= TOP;
+
     return code;
 }
 
-void cohenSutherland(double x1, double y1, double x2, double y2)
-{
-    int code1 = regionCode(x1, y1);
-    int code2 = regionCode(x2, y2);
-    while (true)
-    {
-        double x, y;
-        if (!(code1 | code2)) //... Line is completely inside
-        {
-            line(x1, y1, x2, y2);
-            return;
-        }
-        else if (code1 & code2) break; //... Line is completely outside
-        else //... Line is partially inside
-        {
-            int code = code1 ? code1 : code2;
-            if (code & Top)
-            {
-                y = y_top;
-                x = x1 + (x2 - x1) / (y2 - y1) * (y - y1);
+// Function to clip a line segment using the Cohen-Sutherland algorithm
+void cohenSutherlandLineClip(int x1, int y1, int x2, int y2) {
+    int code1 = computeRegionCode(x1, y1);
+    int code2 = computeRegionCode(x2, y2);
+    bool accept = false;
+
+    while (true) {
+        if ((code1 == 0) && (code2 == 0)) {
+            // Both endpoints are inside the clipping window
+            accept = true;
+            break;
+        } else if (code1 & code2) {
+            // Both endpoints are outside the same region, line is completely outside
+            break;
+        } else {
+            // Line may intersect the clipping window, perform further clipping
+            int codeOut;
+            int x, y;
+
+            if (code1 != 0)
+                codeOut = code1;
+            else
+                codeOut = code2;
+
+            if (codeOut & TOP) {
+                // Clip against the top edge
+                x = x1 + (x2 - x1) * (Y_MAX - y1) / (y2 - y1);
+                y = Y_MAX;
+            } else if (codeOut & BOTTOM) {
+                // Clip against the bottom edge
+                x = x1 + (x2 - x1) * (Y_MIN - y1) / (y2 - y1);
+                y = Y_MIN;
+            } else if (codeOut & RIGHT) {
+                // Clip against the right edge
+                y = y1 + (y2 - y1) * (X_MAX - x1) / (x2 - x1);
+                x = X_MAX;
+            } else if (codeOut & LEFT) {
+                // Clip against the left edge
+                y = y1 + (y2 - y1) * (X_MIN - x1) / (x2 - x1);
+                x = X_MIN;
             }
-            else if (code & Bottom)
-            {
-                y = y_bottom;
-                x = x1 + (x2 - x1) / (y2 - y1) * (y - y1);
-            }
-            else if (code & Left)
-            {
-                x = x_left;
-                y = y1 + (y2 - y1) / (x2 - x1) * (x - x1);
-            }
-            else if (code & Right)
-            {
-                x = x_right;
-                y = y1 + (y2 - y1) / (x2 - x1) * (x - x1);
-            }
-            if (code == code1)
-            {
+
+            if (codeOut == code1) {
                 x1 = x;
                 y1 = y;
-                code1 = regionCode(x1, y1);
-            }
-            else
-            {
+                code1 = computeRegionCode(x1, y1);
+            } else {
                 x2 = x;
                 y2 = y;
-                code2 = regionCode(x2, y2);
+                code2 = computeRegionCode(x2, y2);
             }
         }
     }
+
+    if (accept) {
+        // Draw the clipped line
+        line(x1, y1, x2, y2);
+    }
 }
 
-int main()
-{
-    int gd = DETECT, gm = DETECT;
+int main() {
+    int gd = DETECT, gm;
     initgraph(&gd, &gm, "");
 
+    int x1 = 50, y1 = 150;
+    int x2 = 400, y2 = 50;
+
     setcolor(YELLOW);
-    rectangle(x_left, y_bottom, x_right, y_top);
-    line(50, 200, 500, 400);
+    rectangle(100, 100, 400, 300);
+    // Draw the original line in green
+    setcolor(GREEN);
+    line(x1, y1, x2, y2);
+
+    // Clip the line using the Cohen-Sutherland algorithm
     setcolor(WHITE);
-    cohenSutherland(50, 200, 500, 400);
+    cohenSutherlandLineClip(x1, y1, x2, y2);
 
     getch();
     closegraph();
