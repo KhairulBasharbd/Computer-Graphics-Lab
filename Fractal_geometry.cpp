@@ -1,49 +1,38 @@
 #include <graphics.h>
 
-const int MAX_ITERATIONS = 1000;
-const double MIN_X = -2.5;
-const double MAX_X = 1.0;
-const double MIN_Y = -1.0;
-const double MAX_Y = 1.0;
-const int WIDTH = 800;
-const int HEIGHT = 600;
+void drawSierpinskiTriangle(int x1, int y1, int x2, int y2, int x3, int y3, int depth) {
+    if (depth == 0) {
+        // Base case: Draw the triangle
+        line(x1, y1, x2, y2);
+        line(x2, y2, x3, y3);
+        line(x3, y3, x1, y1);
+    } else {
+        // Recursive case: Divide the triangle into three smaller triangles
+        int mid1x = (x1 + x2) / 2;
+        int mid1y = (y1 + y2) / 2;
+        int mid2x = (x2 + x3) / 2;
+        int mid2y = (y2 + y3) / 2;
+        int mid3x = (x3 + x1) / 2;
+        int mid3y = (y3 + y1) / 2;
 
-int mandelbrot(double x, double y) {
-    double zx = 0.0;
-    double zy = 0.0;
-    int iteration = 0;
-
-    while (zx * zx + zy * zy < 4.0 && iteration < MAX_ITERATIONS) {
-        double xtemp = zx * zx - zy * zy + x;
-        zy = 2 * zx * zy + y;
-        zx = xtemp;
-        iteration++;
+        drawSierpinskiTriangle(x1, y1, mid1x, mid1y, mid3x, mid3y, depth - 1);
+        drawSierpinskiTriangle(mid1x, mid1y, x2, y2, mid2x, mid2y, depth - 1);
+        drawSierpinskiTriangle(mid3x, mid3y, mid2x, mid2y, x3, y3, depth - 1);
     }
-
-    return iteration;
 }
 
 int main() {
     int gd = DETECT, gm;
     initgraph(&gd, &gm, "");
 
-    double dx = (MAX_X - MIN_X) / WIDTH;
-    double dy = (MAX_Y - MIN_Y) / HEIGHT;
+    int x1 = 100, y1 = 400;
+    int x2 = 500, y2 = 400;
+    int x3 = 300, y3 = 100;
+    int depth = 5;
 
-    for (int px = 0; px < WIDTH; px++) {
-        for (int py = 0; py < HEIGHT; py++) {
-            double x = MIN_X + px * dx;
-            double y = MIN_Y + py * dy;
-            int iteration = mandelbrot(x, y);
-
-            // Coloring based on the iteration count
-            int color = iteration % 16;
-            putpixel(px, py, color);
-        }
-    }
+    drawSierpinskiTriangle(x1, y1, x2, y2, x3, y3, depth);
 
     getch();
     closegraph();
     return 0;
 }
-
