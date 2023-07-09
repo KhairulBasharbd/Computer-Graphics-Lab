@@ -46,6 +46,7 @@ int main(){
     //initgraph(&gd,&gm,"");
 
     int x,y,r;
+    printf("Enter co-ordinates of circle and radius : ");
     cin >>x>>y>>r;
 
     mid_point_circle(x,y,r);

@@ -1,40 +1,47 @@
-#include<stdio.h>
+#include<bits/stdc++.h>
 #include<graphics.h>
-void drawline(int x0, int y0, int x1, int y1)
-{
-    int dx, dy, p, x, y;
-    dx=x1-x0;
-    dy=y1-y0;
-    x=x0;
-    y=y0;
-    p=2*dy-dx;
-    while(x<x1)
-    {
-        putpixel(x,y,7);
-        if(p>=0)
-        {
-            y=y+1;
-            p=p+2*dy-2*dx;
+using namespace std;
+
+void linedraw(int x1,int y1,int x2,int y2){
+    int x,y,p,dx,dy;
+
+    dx = abs(x2-x1);
+    dy = abs(y2-y1);
+    p = 2*dy - dx;
+
+    x = x1;
+    y = y1;
+
+    for(int i=0;i<dx;i++){
+        putpixel(x,y,WHITE);
+        if(p<0){
+            p += 2*dy;
+            if(x1>x2) x--;
+            else x++;
         }
-        else
-        {
-            p=p+2*dy;
+        else{
+            p += 2*dy -2*dx;
+            if(x1>x2) x--;
+            else x++;
+
+            if(y1<y2) y++;
+            else y--;
         }
-        x=x+1;
+        delay(50);
     }
 }
-int main()
-{
-    int gdriver=DETECT, gmode, error, x0, y0, x1, y1;
-    initgraph(&gdriver, &gmode, "");
-    printf("Enter co-ordinates of first point: ");
-    scanf("%d%d", &x0, &y0);
-    printf("Enter co-ordinates of second point: ");
-    scanf("%d%d", &x1, &y1);
-    drawline(x0, y0, x1, y1);
+
+
+int main(){
+    initwindow(600,600);
+
+    int x1,y1,x2,y2;
+    printf("Enter co-ordinates of two points : ");
+    cin>>x1>>y1>>x2>>y2;
+
+    linedraw(x1,y1,x2,y2);
 
 
     getch();
     closegraph();
-    return 0;
 }
